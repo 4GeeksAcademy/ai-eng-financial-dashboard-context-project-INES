@@ -1,0 +1,15 @@
+{
+  "//": "Standalone type-check config for frontend/specs/*.ts. This directory is NOT part of tsconfig.app.json's include (only \"src\" is), so `npx tsc --noEmit` run from frontend/ silently skips these files — verified by injecting a deliberate type error into api-types.ts and confirming the bare command still exits 0. Run `npx tsc -p specs --noEmit` from frontend/ (or `npx tsc -p frontend/specs --noEmit` from repo root) to actually check these files. Deliberately NOT merged into tsconfig.app.json: that decision (move these types into src/lib/ vs. wire specs/ into the app build) is still open — see the note at the end of components.md.",
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["*.ts"]
+}

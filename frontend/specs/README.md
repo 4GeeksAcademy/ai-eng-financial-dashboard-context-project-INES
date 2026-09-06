@@ -11,6 +11,14 @@ Convención de estado: **✅ implementado** = el frontend ya lo consume hoy
 (`frontend/src/App.tsx`). **📝 spec** = diseñado en `components.md`, sin
 código todavía.
 
+**Cómo validar los tipos de este directorio**: `npx tsc --noEmit` desde
+`frontend/` **no revisa nada de `specs/`** — este directorio no está en el
+`include` de `tsconfig.app.json` (confirmado inyectando un error de tipos
+deliberado y viendo que el comando igual sale con éxito). Usar
+`npx tsc -p specs --noEmit` desde `frontend/` (config en
+`frontend/specs/tsconfig.json`), que sí falla si `api-types.ts` o
+`param-types.ts` tienen un error real.
+
 ---
 
 ## Errores de validación (aplica a los 9 endpoints por igual)
@@ -135,14 +143,14 @@ dejar ambos.
 params a `GET /api/metrics` (y, si se implementan, a los de Alertas/Top
 Categorías).
 
-**Tipos** (`frontend/specs/param-types.ts:19-29`):
+**Tipos** (`frontend/specs/param-types.ts:23-32`):
 ```ts
 interface DateRangeFilter {
   start_date?: string // YYYY-MM-DD, límite inferior inclusive
   end_date?: string   // YYYY-MM-DD, límite superior inclusive
 }
 ```
-Más `Category`, `OperationType`, `BusinessType` de `api-types.ts:16-26`.
+Más `Category`, `OperationType`, `BusinessType` de `api-types.ts:20-32`.
 
 **Restricciones** (verificadas en vivo, tabla de errores arriba):
 `category`/`operation_type`/`business_type` fuera de su enum → 422;

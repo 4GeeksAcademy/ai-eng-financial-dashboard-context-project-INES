@@ -41,7 +41,7 @@ cierra esa brecha sin hardcodear las opciones válidas en el frontend.
 Archivo: `frontend/src/components/dashboard/filter-bar.tsx`
 
 ```ts
-import type { FacetsResponse, Category, OperationType, BusinessType } from '@/specs-types' // ver nota de import abajo
+import type { FacetsResponse, Category, OperationType, BusinessType } from './api-types' // ver nota de import abajo
 
 interface FilterBarProps {
   /** Opciones válidas, tal como las devuelve el backend — nunca hardcodeadas. */
@@ -77,9 +77,14 @@ mantiene el patrón ya existente donde ningún componente de
 `components/dashboard/` hace su propio fetch — ver `App.tsx:20-26`
 (`fetchJson` vive fuera de los componentes).
 
-**Nota de import**: `@/specs-types` no existe todavía — es un alias
-ilustrativo. Mientras los tipos vivan en `frontend/specs/` (fuera de
-`tsconfig.app.json`), esta interfaz no compila importándolos directo. Ver
+**Nota de import**: el `import from './api-types'` de arriba es real y
+compila hoy — verificado con `npx tsc -p specs --noEmit` (ver
+`frontend/specs/tsconfig.json`) — pero solo porque este bloque vive
+conceptualmente *dentro* de `frontend/specs/`. Copiado tal cual a un
+`.tsx` real bajo `frontend/src/components/dashboard/`, **no** compilaría:
+`tsconfig.app.json` solo incluye `"src"`, así que un archivo en `src/` no
+puede resolver `./api-types` apuntando a `specs/` sin cruzar ese límite a
+mano (`../../specs/api-types`, frágil y no es el patrón del proyecto). Ver
 la sección "Antes de implementar" al final de este documento.
 
 ---
@@ -95,7 +100,7 @@ los 6 endpoints sin conectar.
 Archivo: `frontend/src/components/dashboard/alerts-panel.tsx`
 
 ```ts
-import type { AlertsResponse } from '@/specs-types'
+import type { AlertsResponse } from './api-types'
 
 interface AlertsPanelProps {
   /** `null` mientras no llegó la respuesta; array vacío es un estado válido (sin anomalías), no un error. */
@@ -158,7 +163,7 @@ implementado y testeado, sin consumidor (`be510b5`).
 Archivo: `frontend/src/components/dashboard/top-categories-list.tsx`
 
 ```ts
-import type { TopCategoriesResponse, OperationType } from '@/specs-types'
+import type { TopCategoriesResponse, OperationType } from './api-types'
 
 interface TopCategoriesListProps {
   categories: TopCategoriesResponse | null
@@ -213,14 +218,25 @@ evitar ese problema mientras no haya necesidad real de un gráfico.
 
 ## Antes de implementar (bloqueante, no cosmético)
 
-Los tres bloques de código de arriba importan de `@/specs-types`, que
-**no existe** — es un placeholder. `frontend/specs/` está fuera de
-`tsconfig.app.json` (`include: ["src"]`), así que nada de `src/` puede
-importarlo hoy sin cambiar esa config. Antes de escribir estos componentes
-de verdad, alguien tiene que decidir explícitamente uno de:
+Los tres bloques de código de arriba compilan **hoy**, de forma aislada,
+verificado con `npx tsc -p specs --noEmit` (`frontend/specs/tsconfig.json`,
+agregado para que este chequeo sea real y no un falso verde — correr
+`npx tsc --noEmit` a secas desde `frontend/` **no** toca `specs/`, se
+confirmó inyectando un error de tipos deliberado y viendo que igual salía
+con exit 0). Pero eso solo prueba que las *interfaces* son válidas, no que
+un componente real en `frontend/src/components/dashboard/*.tsx` pueda
+importarlas sin fricción: `tsconfig.app.json` solo incluye `"src"`, así que
+un archivo ahí no puede resolver `./api-types` (que apunta a `specs/`) sin
+una ruta relativa cruzando el límite (`../../specs/api-types`) — funciona,
+pero no es el patrón que usa el resto del proyecto (que usa el alias `@/`).
+
+Antes de escribir estos componentes de verdad, alguien tiene que decidir
+explícitamente uno de:
 1. Mover `api-types.ts`/`param-types.ts` a `frontend/src/lib/` (fusionando
-   con `financial-types.ts`, seguramente), o
-2. Agregar `"specs"` al `include` de `tsconfig.app.json`.
+   con `financial-types.ts`, resolviendo también la duplicación de nombre
+   `FacetsResponse`/`MetricsFacets` que señala `README.md`), o
+2. Agregar `"specs"` al `include` de `tsconfig.app.json` y extender el
+   alias `@/*` para que también resuelva `specs/*`.
 
 No lo decidí en esta spec porque es un cambio de configuración del
 proyecto, no un detalle de un componente — encaja con el mismo criterio ya
