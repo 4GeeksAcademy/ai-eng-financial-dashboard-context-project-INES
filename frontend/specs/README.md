@@ -169,6 +169,17 @@ válida para la API y devuelve `[]`.
    `HTTPValidationError`. La UI debe capturarlo como error de red genérico
    (mismo camino que un 5xx), no crashear parseando `response.json()` como
    si fuera `FinancialMovement[]`.
+3. **Usuario completa solo una fecha del rango** (`DateRangeFilter` permite
+   ambos campos opcionales de forma independiente) — verificado en vivo:
+   - Solo `start_date=2026-08-01` (sin `end_date`) → 30 movimientos, todos
+     de agosto 2026 en adelante (sin tope superior, filtra hasta el final
+     real del dataset).
+   - Solo `end_date=2025-10-01` (sin `start_date`) → 30 movimientos, todos
+     hasta esa fecha (sin piso inferior, desde el inicio real del dataset).
+   La UI **no debe forzar** a completar ambos campos del date picker antes
+   de habilitar el filtro — un solo extremo es un request válido y
+   significa "sin límite" del lado que falta, no "usa el otro valor
+   también como el que falta".
 
 ---
 
@@ -250,6 +261,41 @@ type TopCategoriesResponse = CategoryEntry[]
    progreso relativa al máximo, `total_amount / categories[0].total_amount`,
    da `100%` con un solo elemento — verificar que no divida por cero si
    `categories` llega vacío, caso ya cubierto por el estado vacío general).
+
+---
+
+## Funcionalidad 6: Paneles B2B/B2C — 📝 spec (`TopCategoriesList` ×2, ver `components.md`)
+
+**Endpoint**: `GET /api/metrics/categories/top`, llamado dos veces —
+una con `business_type=B2B`, otra con `business_type=B2C`. Mismo endpoint
+que la Funcionalidad 5; esta es una funcionalidad separada porque compara
+los dos resultados lado a lado, no un ranking único.
+
+**Tipos**: `TopCategoriesParams` (`frontend/specs/param-types.ts`, ahora
+incluye `business_type?: BusinessType` — agregado específicamente para
+esto, revirtiendo la exclusión original de la Fase 2, que asumía que no
+había un caso de uso concreto todavía) y `TopCategoriesResponse` /
+`CategoryEntry`, sin cambios respecto a la Funcionalidad 5.
+
+**Restricciones**: las mismas de `/categories/top` (tabla de errores
+arriba) más: `business_type` fuera de `'B2B' | 'B2C'` → 422, mismo shape
+`HTTPValidationError`.
+
+**Casos límite (verificados en vivo) y qué debe mostrar la UI**:
+1. **Rango de fechas sin datos para uno o ambos `business_type`** —
+   verificado: `business_type=B2B&start_date=2020-01-01&end_date=2020-01-31`
+   y la misma consulta con `business_type=B2C` devuelven **ambas** `200`
+   con `[]`. La UI muestra cada panel con
+   `"Sin categorías de gasto para B2B/B2C en este período."`
+   independientemente — si solo uno de los dos está vacío, el otro sigue
+   mostrando su ranking normal.
+2. **"Top 5" no siempre trae 5 filas** — verificado en vivo sin filtro de
+   fecha: `business_type=B2B` con los defaults (`operation_type=outcome`,
+   `limit=5`) devolvió **4** entradas, no 5 — solo existen 4 categorías de
+   outcome (`OUTCOME_CATEGORIES`, `backend/app/routes.py:17`). Mismo
+   resultado para `business_type=B2C`. La UI no debe reservar espacio fijo
+   para 5 filas ni rellenar con placeholders — el panel se ajusta a
+   `categories.length`.
 
 ---
 

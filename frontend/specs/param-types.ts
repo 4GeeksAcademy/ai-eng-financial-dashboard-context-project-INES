@@ -11,7 +11,7 @@
  * already sends/receives dates.
  */
 
-import type { OperationType } from './api-types'
+import type { BusinessType, OperationType } from './api-types'
 
 /**
  * Optional date-range filter shared by every metrics endpoint that accepts
@@ -54,10 +54,10 @@ export interface AlertsParams extends DateRangeFilter {
 /**
  * Query parameters for `GET /api/metrics/categories/top`.
  *
- * Scope note: the live endpoint also accepts `business_type`
- * (`'B2B' | 'B2C' | null`) — a real, working query param on the backend
- * but **not modeled here**, for the same reason noted on `AlertsParams`.
- * Treat this as a partial request shape.
+ * `business_type` **is** modeled here (unlike the narrower scope note on
+ * `AlertsParams`) because the "Paneles B2B/B2C" functionality
+ * (`components.md`) needs it directly — it is how the same endpoint is
+ * called twice, once per business type, to build those two panels.
  */
 export interface TopCategoriesParams extends DateRangeFilter {
   /**
@@ -70,6 +70,17 @@ export interface TopCategoriesParams extends DateRangeFilter {
    * `1 <= limit <= 20` (`Query(default=5, ge=1, le=20)`,
    * `backend/app/routes.py:290`); a value outside that range gets a `422`
    * validation error, not a clamped result. Omit to use the default of `5`.
+   * **Not a guarantee of exactly this many results**: verified live with
+   * `business_type=B2B` (default `limit=5`, default `operation_type=outcome`)
+   * → only **4** entries came back, because `OUTCOME_CATEGORIES` only has 4
+   * values (`backend/app/routes.py:17`). A "top-5" panel can legitimately
+   * render fewer than 5 rows.
    */
   limit?: number
+  /**
+   * Restrict the ranking to one side of the business. Omit for both. Used
+   * by the B2B/B2C panels to fetch each side independently — see
+   * `components.md`'s "Paneles B2B/B2C".
+   */
+  business_type?: BusinessType
 }

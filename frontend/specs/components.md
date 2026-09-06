@@ -59,6 +59,17 @@ interface FilterBarProps {
 }
 ```
 
+**Renderizado condicional**:
+```
+facets === null            → <Skeleton> de 4 selects (sin opciones que mostrar todavía)
+facets !== null && loading → selects habilitados con las opciones ya cargadas, pero deshabilitados mientras se re-fetchea
+facets !== null && !loading → selects habilitados, opciones desde facets.*
+```
+No hay estado "vacío" propio de este componente — `facets` siempre trae los 5 valores de
+`categories`/2 de `business_types`/2 de `operation_types` mientras el dataset mock tenga
+al menos un movimiento (ver `Funcionalidad 1`), así que `facets.categories.length === 0`
+no es un caso realista hoy.
+
 **Ambigüedad resuelta — de dónde salen las opciones del `<select>`**:
 un brief típicamente diría "el selector de categoría debe mostrar todas las
 categorías disponibles". Sin ese brief, la decisión es: las opciones del
@@ -142,9 +153,21 @@ y `formatMonthYearLabel` solo sabe parsear el formato mensual
 silenciosamente con `group_by=week`. Si el diseño final solo va a pedir
 `group_by=month`, esto se puede simplificar; no asumirlo sin confirmarlo.
 
-**Estado vacío**: `alerts.length === 0` → `"No se detectaron anomalías de
-gasto en este período."` (mismo tono que el mensaje de error ya existente
-en `App.tsx:47`, no un genérico "No data").
+**Estado vacío de la tabla de anomalías** (obligatorio, no cosmético):
+`alerts !== null && alerts.length === 0` → renderizar la tabla vacía con
+`"No se detectaron anomalías de gasto en este período."` en vez del
+`<tbody>`, **nunca** ocultar todo el `Card` ni mostrarlo como error — es
+una respuesta `200` válida (ver `README.md`, sección Alertas, caso límite
+1). Mantener el `<CardHeader>` con el título visible incluso vacío, para
+que el usuario sepa que la sección existe y no está rota.
+
+**Renderizado condicional completo**:
+```
+loading === true       → <Skeleton> de 3 filas dentro del Card
+alerts === null        → mismo <Skeleton> (todavía no llegó respuesta)
+alerts.length === 0    → tabla vacía + mensaje de estado vacío (arriba)
+alerts.length > 0      → una <tr> por AlertEntry, orden tal cual llega (ya viene cronológico)
+```
 
 **Layout**: tabla simple dentro de `Card`/`CardHeader`/`CardContent`
 (reusar `frontend/src/components/ui/card.tsx`, mismo patrón que los charts
@@ -214,11 +237,81 @@ componente compartido (`chart-tooltip.tsx`) — no copiar el tooltip por
 tercera vez. Esta spec recomienda la lista con barras precisamente para
 evitar ese problema mientras no haya necesidad real de un gráfico.
 
+**Renderizado condicional**:
+```
+loading === true         → <Skeleton> de `limit` filas (o 5 si no se pidió limit)
+categories === null      → mismo <Skeleton>
+categories.length === 0  → mensaje de estado vacío (ver Funcionalidad 4, comparte el mismo texto/patrón)
+categories.length > 0    → lista numerada 1..N, N = categories.length (nunca asumir N === limit)
+```
+
+---
+
+## 4. Funcionalidad: Paneles B2B/B2C
+
+**Por qué ahora**: mismo endpoint que la Funcionalidad 3
+(`/api/metrics/categories/top`), pero llamado **dos veces** con
+`business_type` distinto — es una funcionalidad separada porque compara
+dos resultados lado a lado, no un ranking único. Reusa `TopCategoriesList`
+tal cual (no se crea un componente nuevo): el padre (`App.tsx` o quien
+orqueste el estado) instancia `TopCategoriesList` dos veces, una con
+`business_type: 'B2B'` y otra con `business_type: 'B2C'` en el request.
+
+### Props (extensión mínima sobre `TopCategoriesList`)
+```ts
+import type { TopCategoriesResponse, OperationType, BusinessType } from './api-types'
+
+interface TopCategoriesListProps {
+  categories: TopCategoriesResponse | null
+  operationType: OperationType
+  /**
+   * Nuevo respecto a la Funcionalidad 3: identifica qué panel es, para el
+   * título (`"Top 5 — B2B"` / `"Top 5 — B2C"`) y para que el estado vacío
+   * pueda nombrar el lado correcto. No filtra nada por sí solo — el
+   * filtrado ya pasó en el request via `TopCategoriesParams.business_type`.
+   */
+  businessType: BusinessType
+  loading?: boolean
+}
+```
+
+**Estado vacío de "top-5" por panel** (obligatorio, verificado en vivo):
+`GET /api/metrics/categories/top?business_type=B2B&start_date=2020-01-01&end_date=2020-01-31`
+→ `200` con `[]` (rango fuera del dataset real). Cada panel debe manejar
+su propio vacío de forma independiente — si B2B da `[]` pero B2C tiene
+datos, **no** ocultar los dos paneles, solo el que está vacío:
+`"Sin categorías de gasto para B2B en este período."` (mismo patrón de
+texto que Alertas, sustituyendo el sujeto).
+
+**Renderizado condicional** (igual que Funcionalidad 3, repetido por
+claridad porque son dos instancias independientes del mismo componente):
+```
+loading === true         → <Skeleton> del panel correspondiente
+categories === null      → mismo <Skeleton>
+categories.length === 0  → "Sin categorías de gasto para {businessType} en este período."
+categories.length > 0    → lista numerada, título "Top 5 — {businessType}"
+```
+
+**Casos límite (verificados en vivo) y qué debe mostrar la UI**:
+1. **Ninguno de los dos business_type tiene datos en el rango elegido** —
+   verificado: el mismo rango `2020-01-01..2020-01-31` da `[]` para **ambos**
+   `B2B` y `B2C`. La UI muestra los dos paneles con su mensaje de vacío
+   simultáneamente — no es un estado de error de la página, cada panel es
+   independiente.
+2. **"Top 5" trae menos de 5 filas incluso con datos** — verificado en
+   vivo con el dataset real y sin filtro de fecha: `business_type=B2B`
+   (default `operation_type=outcome`, default `limit=5`) devolvió
+   **4** entradas, no 5, porque solo existen 4 categorías de outcome
+   (`suppliers`, `operational`, `administrative`, `others` —
+   `OUTCOME_CATEGORIES`, `backend/app/routes.py:17`). El título del panel
+   dice "Top 5" pero el layout debe acomodar 1-5 filas sin dejar espacio
+   vacío ni asumir siempre 5 — mismo principio que la Funcionalidad 3.
+
 ---
 
 ## Antes de implementar (bloqueante, no cosmético)
 
-Los tres bloques de código de arriba compilan **hoy**, de forma aislada,
+Los cuatro bloques de código de arriba compilan **hoy**, de forma aislada,
 verificado con `npx tsc -p specs --noEmit` (`frontend/specs/tsconfig.json`,
 agregado para que este chequeo sea real y no un falso verde — correr
 `npx tsc --noEmit` a secas desde `frontend/` **no** toca `specs/`, se
