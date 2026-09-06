@@ -1,7 +1,22 @@
 # Nombre de la regla
 `ui-period-label-hardcoded-vs-generated-data`
 
-## Alcance
+## ✅ Estado: RESUELTO (verificado en vivo, 2026-09-06)
+El código ya no tiene este bug. `frontend/src/App.tsx` ahora hace
+`Promise.all([fetchJson("/api/metrics"), fetchJson("/api/metrics/facets")])`
+y calcula el período real con `formatPeriodLabel(facets.min_date,
+facets.max_date)` (`frontend/src/lib/financial-utils.ts:82-86`);
+`dashboard-header.tsx` ya no tiene el default `'2024 — Full Year'`, ahora es
+`'Loading…'`. Se agregó `MetricsFacets` a
+`frontend/src/lib/financial-types.ts:27-33`, resolviendo también el punto 3
+de la guía original. Verificado con `npx tsc -b`, `npx eslint .` y
+`npx vitest run` (5 passed) — todo limpio tras el cambio.
+Este archivo se conserva como registro de auditoría (qué se encontró, cómo
+se verificó, cómo se corrigió) — no se borra ni se trata como problema
+abierto. **No la uses como guía activa para este componente**; usá esta
+entrada solo para entender el historial.
+
+## Alcance (histórico, como estaba antes del fix)
 Aplica cuando un agente va a: (a) tocar `frontend/src/App.tsx` o
 `dashboard-header.tsx`, o (b) razonar sobre "qué período de datos está
 viendo el usuario" para cualquier feature nueva (filtros, comparaciones,

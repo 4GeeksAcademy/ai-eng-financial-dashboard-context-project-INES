@@ -22,10 +22,13 @@ TypeScript frontend and a FastAPI backend."_
 - Muestra 2 gráficos de línea: ingreso/egreso mensual y margen de ganancia
   % mensual (`frontend/src/App.tsx:65-66`, componentes
   `income-outcome-chart.tsx` y `profit-percent-chart.tsx`).
-- Todos los datos que alimentan la UI provienen de **una sola** llamada a
-  `GET /api/metrics` (`frontend/src/App.tsx:16`) — no hay filtros, no hay
-  selector de rango de fechas, no hay interacción del usuario más allá de
-  ver la carga inicial.
+- Los datos que alimentan la UI provienen de **dos** llamadas en paralelo:
+  `GET /api/metrics` y `GET /api/metrics/facets` (`frontend/src/App.tsx:36-39`,
+  vía `Promise.all`) — la segunda alimenta el label de período real del
+  header (`formatPeriodLabel`, `frontend/src/lib/financial-utils.ts:82-86`).
+  ⚠️ Esto cambió durante la auditoría (ver nota de actualización más abajo);
+  no hay filtros ni selector de rango de fechas, no hay interacción del
+  usuario más allá de ver la carga inicial.
 - El backend **no tiene base de datos ni fuente de datos real**: genera un
   año de movimientos financieros sintéticos en memoria, en cada request,
   con una semilla fija (`generate_mock_movements(seed=42)`,
@@ -101,19 +104,27 @@ por interpretación):
 - ✅ Frontend: 5/5 tests pasan (`npx vitest run` desde `frontend/`,
   ejecutado en esta sesión).
 - ✅ Lint del frontend limpio (`npx eslint .`, sin errores).
-- ✅ El único flujo de datos real (`/api/metrics` → `computeKPIs` /
-  `computeMonthlyData` → UI) está completo y es consistente extremo a
-  extremo, verificado leyendo `App.tsx`, `financial-utils.ts` y
-  `routes.py`.
+- ✅ El flujo de datos real (`/api/metrics` + `/api/metrics/facets` →
+  `computeKPIs` / `computeMonthlyData` / `formatPeriodLabel` → UI) está
+  completo y es consistente extremo a extremo — verificado con el backend
+  corriendo de verdad (`uvicorn`, puerto 8000, sin Docker) más
+  `npx tsc -b`, `npx eslint .` y `npx vitest run` (5 passed) sobre el
+  frontend, todo limpio.
+- ✅ Los 9 endpoints responden correctamente contra la API real (no solo
+  contra el código leído): probado con `curl`/`urllib` en vivo, incluyendo
+  `/api/metrics/comparison` con fechas calculadas dinámicamente y
+  `/api/metrics/categories/top`.
 - ❓ El flujo completo de `docker compose up --build` (arranque de ambos
-  contenedores y acceso real a `localhost:5173`/`8000`) **no se ejecutó en
-  esta sesión** — está respaldado solo por lectura estática de
-  `docker-compose.yml` y los Dockerfiles, no por una corrida confirmada.
+  contenedores vía Docker Compose específicamente) **no se ejecutó en esta
+  sesión** — el backend sí se verificó corriendo, pero directo con
+  `uvicorn`, no a través de Docker Compose.
 
 ### Qué falta (verificado por ausencia, no interpretación)
-- 7 de 9 endpoints del backend no tienen ningún consumidor en el frontend:
-  `/api/metrics/facets`, `/summary`, `/categories/top`, `/comparison`,
-  `/alerts`, `/b2b`, `/b2c` (ver `[[frontend-backend-integration-gap]]`).
+- 6 de 9 endpoints del backend no tienen ningún consumidor en el frontend:
+  `/api/metrics/summary`, `/categories/top`, `/comparison`, `/alerts`,
+  `/b2b`, `/b2c` (ver `[[frontend-backend-integration-gap]]`). El propio
+  `/api/metrics/facets` **dejó de estar en esta lista** durante esta
+  auditoría — ver nota de actualización abajo.
 - Sin autenticación, sin base de datos, sin CI, sin tests de componentes
   frontend, sin pins de versión en `backend/requirements.txt`, sin
   documentación de por qué se tomaron decisiones no obvias (CORS abierto,
@@ -123,12 +134,18 @@ por interpretación):
   (verificado ejecutando el generador: rango real 2025-09-02 a
   2026-08-28) — pasa igual porque solo valida el schema de la respuesta,
   no los valores. Ver `mock-data-date-range-is-a-rolling-window.md`.
-- El header de la UI muestra "2024 — Full Year" hardcodeado, que no
-  corresponde al rango real generado por el backend. Ver
-  `ui-period-label-hardcoded-vs-generated-data.md`.
 - `frontend/src/lib/mock-data.ts` existe sin ningún import que lo consuma
   — estado sin confirmar (código muerto vs. remanente intencional). Ver
   `mock-data-file-has-no-confirmed-consumer.md`.
+
+### ✅ Resuelto durante esta auditoría (2026-09-06)
+El header de la UI mostraba "2024 — Full Year" hardcodeado, sin relación
+con los datos reales del backend. **Ya no**: el código se actualizó (no por
+este agente — cambió en paralelo durante la sesión) para pedir
+`/api/metrics/facets` y derivar el label real vía `formatPeriodLabel`.
+Verificado con tests + build limpios. Ver
+`ui-period-label-hardcoded-vs-generated-data.md` para el registro completo
+de auditoría (queda documentado, no borrado).
 
 ### Prioridades reales (inferidas de la evidencia de riesgo — no son un
 roadmap declarado por el proyecto; el repo no tiene issues ni backlog
@@ -140,11 +157,9 @@ impacto observado, a validar con el dueño del repo)
    de esta auditoría con evidencia de una suite "verde" que no está
    validando comportamiento real. Prioridad alta porque erosiona la
    confianza en `pytest -q` como señal de salud del backend.
-2. **Resolver la discrepancia del label de período en la UI** — es
-   información visible al usuario que hoy es objetivamente falsa
-   (verificado con datos reales del generador). Prioridad alta por ser
-   user-facing.
-3. **Decidir qué hacer con los 7 endpoints sin consumidor** — no es un bug,
+2. ~~Resolver la discrepancia del label de período en la UI~~ — **resuelto**
+   durante esta auditoría (ver arriba). Ya no es una prioridad pendiente.
+3. **Decidir qué hacer con los 6 endpoints sin consumidor** — no es un bug,
    pero bloquea saber si el "estado actual" del frontend es intencional o
    está incompleto. Prioridad media: no se puede planear trabajo nuevo de
    dashboard sin resolver esta ambigüedad primero.
@@ -153,6 +168,16 @@ impacto observado, a validar con el dueño del repo)
 5. **Pins de versión en `backend/requirements.txt`** — prioridad baja
    mientras el proyecto sea de coursework; se vuelve alta si se plantea
    cualquier despliegue fuera de un entorno de práctica.
+
+### Nota de actualización (2026-09-06, misma sesión)
+Los puntos de esta sección se escribieron temprano en la auditoría, leyendo
+código estático. Más tarde, en la misma sesión, el código de
+`frontend/src/App.tsx` cambió (fuera de este agente) para resolver
+exactamente el problema del punto 2. Esto se detectó al re-verificar en
+vivo contra la API corriendo, no por casualidad — la lección para cualquier
+agente futuro: **no cites un hallazgo de auditoría como vigente sin
+re-verificarlo si pasó tiempo o trabajo en paralelo**, incluso dentro de la
+misma sesión.
 
 ---
 
