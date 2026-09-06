@@ -23,3 +23,11 @@ export interface MonthlyDataPoint {
   outcome: number
   profitPercent: number
 }
+
+export interface MetricsFacets {
+  operation_types: OperationType[]
+  business_types: BusinessType[]
+  categories: Category[]
+  min_date: string // ISO date
+  max_date: string // ISO date
+}

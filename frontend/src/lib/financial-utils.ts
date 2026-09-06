@@ -78,3 +78,9 @@ export function formatCurrency(value: number): string {
 export function formatPercent(value: number): string {
   return `${value.toFixed(1)}%`;
 }
+
+export function formatPeriodLabel(minDate: string, maxDate: string): string {
+  const start = formatMonthYearLabel(toYearMonthKey(new Date(minDate)));
+  const end = formatMonthYearLabel(toYearMonthKey(new Date(maxDate)));
+  return start === end ? start : `${start} - ${end}`;
+}
