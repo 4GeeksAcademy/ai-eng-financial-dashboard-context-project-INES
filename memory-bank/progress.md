@@ -58,9 +58,16 @@ speculatively) and each verified with the project's own build/lint/test:
       in-session via `npm install` (272 packages). Not persisted as a repo
       fix — this is an environment/machine-state issue, not a code bug. If
       this recurs, re-run `npm install` in `frontend/`.
-- [ ] `npm audit` reports 8 vulnerabilities (1 low, 1 moderate, 6 high) in
-      frontend transitive dependencies — not triaged yet (re-confirmed
-      2026-09-07, same numbers as 2026-09-06).
+- [x] ~~`npm audit` reports 8 vulnerabilities~~ — **resolved 2026-09-07**:
+      `npm audit fix` (no `--force`, all fixes within `package.json`'s
+      existing semver ranges) → 0 vulnerabilities. Bumped vite 8.0.x →
+      8.2.2, which surfaced a new build warning (`__dirname` deprecated);
+      fixed for real in `vite.config.ts` (`import.meta.dirname`), not
+      suppressed. Re-verified clean: `lint`/`test`/`build`. Note: the
+      *running* frontend container still has the pre-fix versions baked
+      into its image until the next `docker compose up --build` (its
+      `node_modules` lives on an anonymous volume, separate from the host's
+      — see `[[anonymous-volume-empty-node-modules]]`).
 - [ ] `backend/requirements.txt` has no version pins — reproducibility risk,
       not yet addressed.
 - [ ] Two `.agents/rules/*.md` files document bugs that are now fixed
