@@ -17,9 +17,11 @@ each skill's own `SKILL.md`; this is the index, not the source of truth._
 | 4 | `[[agents-rules-freshness]]` | **Skill interna creada** (gap que ninguna externa cubre) | 20/20 reglas de `.agents/rules/` re-verificadas: 12 vigentes, 8 desactualizadas (6 corregidas, 2 marcadas resueltas y dejadas para decisión del dueño). |
 
 Todas las skills quedaron guardadas y son releíbles: 1-3 en
-`.agents/skills/<nombre>/SKILL.md`, la 4 en
-`.claude/skills/agents-rules-freshness/SKILL.md` (ver esa sección más abajo
-para por qué el path es distinto). Ningún cambio de código se hizo sin
+`.agents/skills/<nombre>/SKILL.md`, la 4 (interna) en
+`.skills/agents-rules-freshness/SKILL.md` — como pide la rúbrica de
+evaluación — con un symlink desde `.claude/skills/agents-rules-freshness/SKILL.md`
+para que además sea cargable por Claude Code en una sesión (ver esa sección
+más abajo para el detalle). Ningún cambio de código se hizo sin
 correr `npm run lint`/`test`/`build` (frontend) o `pytest -q` (backend)
 después — el detalle de cada corrida está en las secciones fechadas de más
 abajo y en `progress.md`.
@@ -33,13 +35,16 @@ findable on the public skills.sh registry — can know that **this repo**
 maintains its own hand-written `.agents/rules/*.md` memory bank, or verify
 whether those files still match the code they cite. That upkeep is entirely
 project-specific, so it became its own skill instead of a 4th
-`.agents/skills/` entry: [[agents-rules-freshness]], stored at
-`.claude/skills/agents-rules-freshness/SKILL.md` (the directory Claude Code
-actually scans to make a skill loadable in-session — `.agents/skills/` is
-this project's own read-this-first convention for agents, not a harness
-discovery path; confirmed via the `claude-code-guide` subagent rather than
-assumed). Objective/inputs/output/acceptance-criteria are in the skill file
-itself.
+`.agents/skills/` entry: [[agents-rules-freshness]]. Canonical file is
+`.skills/agents-rules-freshness/SKILL.md` (matching the project's evaluation
+rubric, which names `.skills/` specifically for the internal skill).
+`.claude/skills/agents-rules-freshness/SKILL.md` is a symlink to that same
+file — `.claude/skills/` is the directory Claude Code actually scans to make
+a skill loadable/invokable in-session (confirmed via the `claude-code-guide`
+subagent rather than assumed; `.agents/skills/` is this project's own
+read-this-first convention for agents, not a harness discovery path). A
+symlink instead of two copies means there's nothing to keep in sync.
+Objective/inputs/output/acceptance-criteria are in the skill file itself.
 
 ### First real run: 20 rules audited, 8 stale, 0 unverifiable
 Full procedure run against every file in `.agents/rules/` (not a sample):

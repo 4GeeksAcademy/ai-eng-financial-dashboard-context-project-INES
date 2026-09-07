@@ -22,15 +22,17 @@ recurring, multi-step procedure — not a one-off fact, which belongs in
   `memory-bank/activeContext.md` for why. Added 2026-09-07.
 
 ## Internal skill (lives outside this directory, on purpose)
-[`agents-rules-freshness`](../../.claude/skills/agents-rules-freshness/SKILL.md)
+[`agents-rules-freshness`](../../.skills/agents-rules-freshness/SKILL.md)
 covers a gap none of the three skills above (or anything findable via
 `npx skills find`) can: keeping **this project's own** `.agents/rules/*.md`
-files honest as the code they cite keeps changing. It's stored under
-`.claude/skills/` instead of here because that's the directory Claude Code
-actually scans to make a skill loadable/invokable via `/agents-rules-freshness`
-in a session — a `SKILL.md` under `.agents/skills/` is documentation other
-agents are told to read (per `AGENTS.md`), not something the harness itself
-discovers. First real run (2026-09-07) found 6 of the 20 rule files citing
+files honest as the code they cite keeps changing. Its canonical file lives
+at `.skills/agents-rules-freshness/SKILL.md` (not here, since a skill under
+`.agents/skills/` is documentation other agents are told to read per
+`AGENTS.md`, not a skill in the harness sense). `.claude/skills/agents-rules-freshness/SKILL.md`
+is a symlink to that same file, so it's also loadable/invokable via
+`/agents-rules-freshness` in a Claude Code session (`.claude/skills/` is the
+directory the harness actually scans) without keeping two copies that could
+drift apart. First real run (2026-09-07) found 6 of the 20 rule files citing
 line numbers or counts that had drifted, and 2 more whose entire premise had
 already been resolved by later commits — see the skill file's own
 "Hallazgos" section and `memory-bank/activeContext.md` for the corrections

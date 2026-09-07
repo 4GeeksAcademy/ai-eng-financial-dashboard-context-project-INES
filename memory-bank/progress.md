@@ -27,11 +27,15 @@ speculatively) and each verified with the project's own build/lint/test:
       was already clean) and `"noUncheckedIndexedAccess": true` (caught 6
       real possibly-undefined errors via `tsc -b`, fixed for real in
       `financial-utils.ts` and both chart components, not suppressed).
-- [x] **Skill interna creada** — `[[agents-rules-freshness]]`, stored at
-      `.claude/skills/agents-rules-freshness/SKILL.md` (not
-      `.agents/skills/`, since that's the directory Claude Code actually
-      scans to make a skill loadable in-session — confirmed via the
-      `claude-code-guide` subagent). Covers a gap no external skill can:
+- [x] **Skill interna creada** — `[[agents-rules-freshness]]`, canonical
+      file at `.skills/agents-rules-freshness/SKILL.md` (matches the
+      evaluation rubric, which names `.skills/` for this one specifically),
+      symlinked from `.claude/skills/agents-rules-freshness/SKILL.md` so
+      it's also loadable in a Claude Code session (`.claude/skills/` is the
+      directory the harness actually scans — confirmed via the
+      `claude-code-guide` subagent — while `.agents/skills/` is this
+      project's own convention, not a harness discovery path). Covers a gap
+      no external skill can:
       re-verifying that `.agents/rules/*.md`'s cited evidence still matches
       the code. First run: 20 rules audited, 12 vigente, 8 desactualizada (6
       fixed in place, 2 flagged for the owner since they're fully resolved,
@@ -75,8 +79,8 @@ speculatively) and each verified with the project's own build/lint/test:
       "Skills applied" above).
 - [x] `.agents/skills/` — 3 skills (`accessibility-audit`,
       `vercel-react-best-practices`, `typescript-best-practices`); a 4th,
-      `agents-rules-freshness`, lives in `.claude/skills/` instead (see
-      above for why).
+      `agents-rules-freshness`, lives in `.skills/` instead (see above for
+      why), symlinked into `.claude/skills/` for loadability.
 - [x] `memory-bank/` — created 2026-09-06 (`projectbrief.md`,
       `techContext.md`, `systemPatterns.md`, `activeContext.md`,
       `progress.md`); `productContext.md` and `repoStructure.md` were added
