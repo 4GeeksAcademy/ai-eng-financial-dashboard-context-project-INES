@@ -62,9 +62,11 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
   }
 
   const hasData = data.some((d) => d.income > 0 || d.outcome > 0)
+  const firstMonth = data[0]?.month
+  const lastMonth = data.at(-1)?.month
   const chartLabel =
-    hasData && data.length > 0
-      ? `Line chart of monthly income and outcome from ${data[0].month} to ${data[data.length - 1].month}`
+    hasData && firstMonth && lastMonth
+      ? `Line chart of monthly income and outcome from ${firstMonth} to ${lastMonth}`
       : "Line chart of monthly income and outcome"
 
   return (

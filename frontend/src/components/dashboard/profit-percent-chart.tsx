@@ -63,9 +63,11 @@ export function ProfitPercentChart({ data, loading }: ProfitPercentChartProps) {
   }
 
   const hasData = data.some((d) => d.profitPercent !== 0)
+  const firstMonth = data[0]?.month
+  const lastMonth = data.at(-1)?.month
   const chartLabel =
-    hasData && data.length > 0
-      ? `Line chart of monthly profit margin percentage from ${data[0].month} to ${data[data.length - 1].month}`
+    hasData && firstMonth && lastMonth
+      ? `Line chart of monthly profit margin percentage from ${firstMonth} to ${lastMonth}`
       : "Line chart of monthly profit margin percentage"
 
   return (

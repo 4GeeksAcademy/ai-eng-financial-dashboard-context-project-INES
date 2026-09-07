@@ -15,6 +15,11 @@ recurring, multi-step procedure — not a one-off fact, which belongs in
   project's actual stack (a Vite SPA, not Next.js — the skill documents
   which Next.js-specific APIs don't apply here and what to check instead).
   Added 2026-09-07.
+- [`typescript-best-practices`](./typescript-best-practices/SKILL.md) —
+  strict-compiler-flag audit (`strict`, `noUncheckedIndexedAccess`) verified
+  against the real `tsc -b` build, not assumed. Selected over
+  performance/testing/seo candidates found via `npx skills find` — see
+  `memory-bank/activeContext.md` for why. Added 2026-09-07.
 
 Revisit this directory as other tasks are performed more than once in the
 same shape (e.g., "add a new metrics endpoint and wire it to the frontend"
