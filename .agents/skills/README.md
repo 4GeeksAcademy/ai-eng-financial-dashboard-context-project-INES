@@ -10,6 +10,11 @@ recurring, multi-step procedure — not a one-off fact, which belongs in
   verification procedure for auditing `frontend/src` for keyboard
   navigation, `aria-*`/`role` usage, `alt` text, and color contrast, added
   2026-09-07 after the first real audit pass on the dashboard.
+- [`vercel-react-best-practices`](./vercel-react-best-practices/SKILL.md) —
+  checklist for images, metadata, layout shift, and fonts, adapted to this
+  project's actual stack (a Vite SPA, not Next.js — the skill documents
+  which Next.js-specific APIs don't apply here and what to check instead).
+  Added 2026-09-07.
 
 Revisit this directory as other tasks are performed more than once in the
 same shape (e.g., "add a new metrics endpoint and wire it to the frontend"
