@@ -13,7 +13,9 @@ hostname resoluble. Fuera de ese contexto, el proxy falla de forma que
 parece un problema de la API, no de configuración de red.
 
 ## Evidencia
-- `frontend/vite.config.ts:11-16`:
+_(Líneas corregidas 2026-09-07 por `agents-rules-freshness`: el contenido
+sigue siendo exacto, solo habían corrido los números de línea.)_
+- `frontend/vite.config.ts:9-17`:
   ```ts
   server: {
     host: "0.0.0.0",
@@ -26,7 +28,7 @@ parece un problema de la API, no de configuración de red.
   `docker-compose.yml:14` (`backend:` bajo `services:`), no un hostname que
   resuelva vía DNS público o `/etc/hosts` por defecto.
 - Mensaje de error real que verá el usuario si el fetch falla, ya escrito
-  en `frontend/src/App.tsx:37`: `"No se pudo cargar la informacion
+  en `frontend/src/App.tsx:47`: `"No se pudo cargar la informacion
   financiera. Revisa la API de backend."` — no menciona nada sobre el proxy
   o la red de Docker, así que el mensaje no da la pista real.
 

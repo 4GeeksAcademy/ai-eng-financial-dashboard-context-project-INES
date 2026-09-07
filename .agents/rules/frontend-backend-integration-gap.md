@@ -7,8 +7,13 @@ The backend exposes 9 routes:
 `/api/metrics/b2b`, `/api/metrics/b2c`
 (Source: `backend/app/routes.py:243-391`, one `@router.get(...)` per route.)
 
-The frontend only calls **one** of them:
-`fetch(`${API_BASE_URL}/api/metrics`)` — Source: `frontend/src/App.tsx:16`.
+_Updated 2026-09-07 by the `agents-rules-freshness` skill — the frontend-caller
+count below changed since this rule was written; re-verified against current
+code, not assumed._
+
+The frontend calls **two** of them, both through one shared `fetchJson<T>`
+helper (`frontend/src/App.tsx:20-26`), invoked twice at
+`frontend/src/App.tsx:37-38`: `/api/metrics` and `/api/metrics/facets`.
 
 All aggregation shown in the UI (KPI totals, monthly income/outcome, profit %) is
 computed **client-side** from the raw `/api/metrics` payload, in
@@ -20,7 +25,7 @@ server-side, `backend/app/routes.py:268-284`) or `/api/metrics/comparison` or
 ## Why this matters
 - Before implementing a new dashboard feature (e.g., top categories, alerts,
   period comparison), check whether the backend endpoint **already exists**
-  (`backend/app/routes.py`) before writing new backend code — 7 of 9 endpoints
+  (`backend/app/routes.py`) before writing new backend code — 6 of 9 endpoints
   are currently unused by the UI and are the most likely candidates to wire up.
 - Do not duplicate server-side aggregation logic (e.g. `summarize_movements`,
   `backend/app/routes.py:161-187`) inside the frontend if the equivalent
