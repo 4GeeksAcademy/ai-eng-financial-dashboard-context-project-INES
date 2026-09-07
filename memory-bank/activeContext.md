@@ -3,7 +3,26 @@
 _Last updated: 2026-09-07, after adding a 4th, internal skill
 (`agents-rules-freshness`) and running it for real against `.agents/rules/`,
 on top of the three `.agents/skills/` added earlier the same day — see below,
-oldest section last. Branch `feature/agent-skills`._
+oldest section last. Branch `feature/agent-skills`. Full detail on every
+line below is in `memory-bank/progress.md`'s "Skills applied" section and
+each skill's own `SKILL.md`; this is the index, not the source of truth._
+
+## Registro rápido (2026-09-07)
+
+| # | Skill | Tipo | Cambios verificados |
+|---|-------|------|----------------------|
+| 1 | `[[accessibility-audit]]` | Externa, adaptada | `<title>` real, `CardTitle`→`h3`, `role="alert"`/`aria-live`, `role="img"`+`aria-label` en charts. `lint`/`test`/`build` verdes. |
+| 2 | `[[vercel-react-best-practices]]` | Externa, adaptada (Next.js→Vite) | `<meta description>`, fuente `Inter` realmente cargada, skeletons alineados al `line-height` real. `lint`/`test`/`build` verdes, sin warnings nuevos. |
+| 3 | `[[typescript-best-practices]]` | **Skill adicional elegida** (de 4 buscadas con `npx skills find`: performance/seo/testing/typescript) | `strict: true` (0 errores) + `noUncheckedIndexedAccess: true` (6 errores reales encontrados y corregidos, no suprimidos) en ambos `tsconfig.*.json`. |
+| 4 | `[[agents-rules-freshness]]` | **Skill interna creada** (gap que ninguna externa cubre) | 20/20 reglas de `.agents/rules/` re-verificadas: 12 vigentes, 8 desactualizadas (6 corregidas, 2 marcadas resueltas y dejadas para decisión del dueño). |
+
+Todas las skills quedaron guardadas y son releíbles: 1-3 en
+`.agents/skills/<nombre>/SKILL.md`, la 4 en
+`.claude/skills/agents-rules-freshness/SKILL.md` (ver esa sección más abajo
+para por qué el path es distinto). Ningún cambio de código se hizo sin
+correr `npm run lint`/`test`/`build` (frontend) o `pytest -q` (backend)
+después — el detalle de cada corrida está en las secciones fechadas de más
+abajo y en `progress.md`.
 
 ## 2026-09-07 (later): internal skill — `agents-rules-freshness`
 
