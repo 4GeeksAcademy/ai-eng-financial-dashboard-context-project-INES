@@ -12,20 +12,32 @@ agente que necesita una capacidad (ej. "comparar este mes contra el
 anterior") puede terminar reimplementándola en el backend o en el cliente
 sin saber que ya existe un endpoint listo y testeado para eso.
 
+## ⚠️ Nombre desactualizado (verificado 2026-09-07 por `agents-rules-freshness`)
+El título dice "seven" pero hoy son **seis** endpoints de negocio sin
+consumidor — el frontend conectó `/api/metrics/facets` después de que esta
+regla se escribiera (commit `eeece05`). No se renombró el archivo/regla
+unilateralmente porque cambia su identidad y lo referencian otros documentos
+por ese nombre; pendiente de confirmar con el usuario si renombrar a
+`six-of-nine-...` o reformular sin el conteo en el nombre.
+
 ## Evidencia
 - 9 rutas totales, confirmadas con
   `grep -n "@router\." backend/app/routes.py`: `/health`, `/api/metrics`,
   `/api/metrics/facets`, `/api/metrics/summary`,
   `/api/metrics/categories/top`, `/api/metrics/comparison`,
   `/api/metrics/alerts`, `/api/metrics/b2b`, `/api/metrics/b2c`.
-- Único `fetch()` de todo el frontend, confirmado con
-  `grep -rn "fetch(" frontend/src` → 1 resultado:
-  `frontend/src/App.tsx:16`, apuntando solo a `/api/metrics`.
-- Las 6 rutas de negocio no usadas fueron agregadas en 6 commits
-  backend-only consecutivos (`959bc84` "facets" → `2b5c237` "summary" →
-  `be510b5` "top categories" → `5df15b4` "comparison" → `0c07552` "alerts"
-  → `87e1942` "refactor filters"), sin ningún commit de frontend
-  correspondiente en el mismo rango (`git log --oneline`).
+- Dos `fetch()` de todo el frontend, ambos vía el helper compartido
+  `fetchJson<T>` (`frontend/src/App.tsx:20-26`), invocado en
+  `frontend/src/App.tsx:37-38` contra `/api/metrics` y
+  `/api/metrics/facets` — confirmado con
+  `grep -rn "fetch(\|fetchJson" frontend/src`.
+- Las **6** rutas de negocio que siguen sin usarse hoy:
+  `/api/metrics/summary`, `/api/metrics/categories/top`,
+  `/api/metrics/comparison`, `/api/metrics/alerts`, `/api/metrics/b2b`,
+  `/api/metrics/b2c`. Fueron agregadas en los mismos commits backend-only
+  originales (`959bc84` → `87e1942`, ver `git log --oneline`); `facets` fue
+  la única de las 7 originales que después ganó un consumidor en el
+  frontend.
 
 ## Guía accionable específica para este proyecto
 1. Antes de escribir lógica de agregación/filtrado nueva en

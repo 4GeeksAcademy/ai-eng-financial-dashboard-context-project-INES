@@ -111,48 +111,54 @@ por interpretación):
   `docker-compose.yml` y los Dockerfiles, no por una corrida confirmada.
 
 ### Qué falta (verificado por ausencia, no interpretación)
-- 7 de 9 endpoints del backend no tienen ningún consumidor en el frontend:
-  `/api/metrics/facets`, `/summary`, `/categories/top`, `/comparison`,
-  `/alerts`, `/b2b`, `/b2c` (ver `[[frontend-backend-integration-gap]]`).
+_Sección corregida 2026-09-07 por la skill interna `[[agents-rules-freshness]]`
+— los tres puntos que siguen estaban desactualizados; ver esa skill para el
+procedimiento de verificación._
+- 6 de 9 endpoints del backend no tienen ningún consumidor en el frontend
+  (bajó de 7: `/api/metrics/facets` se conectó en el commit `eeece05`):
+  `/summary`, `/categories/top`, `/comparison`, `/alerts`, `/b2b`, `/b2c`
+  (ver `[[frontend-backend-integration-gap]]`).
 - Sin autenticación, sin base de datos, sin CI, sin tests de componentes
   frontend, sin pins de versión en `backend/requirements.txt`, sin
   documentación de por qué se tomaron decisiones no obvias (CORS abierto,
   `seed=42`, umbral de alertas `0.3` por defecto).
-- Un test existente (`test_metrics_comparison_returns_delta_fields`) usa
-  fechas hardcodeadas que hoy matchean **0 movimientos** del dataset mock
-  (verificado ejecutando el generador: rango real 2025-09-02 a
-  2026-08-28) — pasa igual porque solo valida el schema de la respuesta,
-  no los valores. Ver `mock-data-date-range-is-a-rolling-window.md`.
-- El header de la UI muestra "2024 — Full Year" hardcodeado, que no
-  corresponde al rango real generado por el backend. Ver
-  `ui-period-label-hardcoded-vs-generated-data.md`.
+- ~~Un test existente usa fechas hardcodeadas que matchean 0 movimientos~~ —
+  **resuelto**: `test_metrics_comparison_returns_delta_fields`
+  (`backend/tests/test_routes.py:155-182`) ya usa un rango relativo a
+  `date.today()` y assertea `delta_abs` contra un valor real, no solo el
+  schema. Ver `mock-data-date-range-is-a-rolling-window.md` (regla resuelta,
+  pendiente de que el dueño del repo decida si archivarla).
+- ~~El header de la UI muestra "2024 — Full Year" hardcodeado~~ —
+  **resuelto**: `frontend/src/App.tsx` deriva el período de
+  `facets.min_date`/`max_date` vía `formatPeriodLabel`. Ver
+  `ui-period-label-hardcoded-vs-generated-data.md` (regla resuelta, misma
+  decisión pendiente).
 - `frontend/src/lib/mock-data.ts` existe sin ningún import que lo consuma
-  — estado sin confirmar (código muerto vs. remanente intencional). Ver
-  `mock-data-file-has-no-confirmed-consumer.md`.
+  — estado sin confirmar (código muerto vs. remanente intencional), aún
+  vigente al re-verificar. Ver `mock-data-file-has-no-confirmed-consumer.md`.
 
 ### Prioridades reales (inferidas de la evidencia de riesgo — no son un
 roadmap declarado por el proyecto; el repo no tiene issues ni backlog
 documentado, así que esto es una lectura de qué corregir primero según
 impacto observado, a validar con el dueño del repo)
 
-1. **Corregir el test que pasa vacíamente**
-   (`test_metrics_comparison_returns_delta_fields`) — es el único hallazgo
-   de esta auditoría con evidencia de una suite "verde" que no está
-   validando comportamiento real. Prioridad alta porque erosiona la
-   confianza en `pytest -q` como señal de salud del backend.
-2. **Resolver la discrepancia del label de período en la UI** — es
-   información visible al usuario que hoy es objetivamente falsa
-   (verificado con datos reales del generador). Prioridad alta por ser
-   user-facing.
-3. **Decidir qué hacer con los 7 endpoints sin consumidor** — no es un bug,
-   pero bloquea saber si el "estado actual" del frontend es intencional o
-   está incompleto. Prioridad media: no se puede planear trabajo nuevo de
-   dashboard sin resolver esta ambigüedad primero.
+1. ~~Corregir el test que pasa vacíamente~~ — **hecho** (ver arriba),
+   confirmado por `[[agents-rules-freshness]]` el 2026-09-07.
+2. ~~Resolver la discrepancia del label de período en la UI~~ — **hecho**
+   (ver arriba), misma verificación.
+3. **Decidir qué hacer con los 6 endpoints sin consumidor** (bajó de 7) —
+   no es un bug, pero bloquea saber si el "estado actual" del frontend es
+   intencional o está incompleto. Prioridad media: no se puede planear
+   trabajo nuevo de dashboard sin resolver esta ambigüedad primero.
 4. **Confirmar el estado de `mock-data.ts`** — bajo esfuerzo, resuelve una
-   ambigüedad concreta.
+   ambigüedad concreta. Sigue sin resolver (re-verificado 2026-09-07).
 5. **Pins de versión en `backend/requirements.txt`** — prioridad baja
    mientras el proyecto sea de coursework; se vuelve alta si se plantea
    cualquier despliegue fuera de un entorno de práctica.
+6. **Habilitar `agents-rules-freshness` sobre `memory-bank/*.md`** (no solo
+   `.agents/rules/`) — este mismo documento tenía las tres afirmaciones ya
+   corregidas arriba hasta el 2026-09-07; nada re-verifica `memory-bank/`
+   hoy salvo que se pida explícitamente.
 
 ---
 

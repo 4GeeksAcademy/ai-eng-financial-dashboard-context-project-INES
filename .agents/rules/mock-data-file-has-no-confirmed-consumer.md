@@ -19,8 +19,13 @@ diseño) que un grep puntual no cubra.
   objetos `FinancialMovement` hardcodeados, meses enero–diciembre 2024).
 - `grep -rn "mock-data" frontend/src` — ejecutado en esta sesión — no
   devuelve ningún `import` que lo consuma, solo el propio archivo.
-- `frontend/src/App.tsx:15-21` obtiene sus datos exclusivamente vía
-  `fetch(`${API_BASE_URL}/api/metrics`)`, no desde `mock-data.ts`.
+- `frontend/src/App.tsx:37-38` obtiene sus datos exclusivamente vía el
+  helper `fetchJson` (`frontend/src/App.tsx:20-26`) contra `/api/metrics` y
+  `/api/metrics/facets`, no desde `mock-data.ts`. _(Línea corregida
+  2026-09-07 por `agents-rules-freshness`: la cita original, `:15-21`, ya no
+  contiene el `fetch()`; el resto de la regla sigue vigente — `grep -rn
+  "mockMovements\|mock-data" frontend/src` sigue devolviendo solo el propio
+  archivo.)_
 
 ## Guía accionable específica para este proyecto
 1. Antes de tocar `mock-data.ts`, correr de nuevo

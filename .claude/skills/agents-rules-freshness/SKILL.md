@@ -1,0 +1,1 @@
+../../../.skills/agents-rules-freshness/SKILL.md

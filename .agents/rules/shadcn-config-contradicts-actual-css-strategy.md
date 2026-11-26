@@ -14,7 +14,9 @@ sistema, porque asume una estrategia de estilos distinta a la que el CSS
 real usa.
 
 ## Evidencia
-- `frontend/components.json:9` declara `"cssVariables": false`.
+- `frontend/components.json:10` declara `"cssVariables": false`. _(Corregido
+  2026-09-07 por `agents-rules-freshness`: la línea citada originalmente
+  era `:9`, que hoy es `"baseColor": "zinc",`.)_
 - `frontend/src/index.css:5-76` define, sin embargo, ~40 variables CSS OKLCH
   (`--background`, `--foreground`, `--chart-income`, `--chart-outcome`,
   `--chart-profit`, `--income-badge`, `--income-badge-fg`, etc.), incluyendo
